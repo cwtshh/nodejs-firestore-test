@@ -37,7 +37,7 @@ const register_user = async(req, res) => {
 
     try {
         
-        const response = await db.collection('users').doc(new_user.uuid).set(new_user);
+        await db.collection('users').doc(new_user.uuid).set(new_user);
         res.status(200).json({
             message: 'User registered successfully',
             token: generate_token(new_user.uuid),
