@@ -1,6 +1,8 @@
 const multer = require('multer');
 const { getStorage, ref, getDownloadURL, uploadBytesResumable } = require('firebase/storage');
 const { initializeApp } = require('firebase/app');
+const { exec } = require('child_process');
+const fs = require('fs');
 
 const firebaseConfig = {
     apiKey: process.env.API_KEY,
@@ -12,10 +14,6 @@ const firebaseConfig = {
 };
 initializeApp(firebaseConfig);
 const storage = getStorage();
-
-const upload = multer({storage: multer.memoryStorage(),}).single('filename');
-
-
 
 const upload_file = async(req, res) => {
     try{
@@ -42,6 +40,29 @@ const upload_file = async(req, res) => {
     }
 };
 
+const run_python_code = async(req, res) => {
+    const file =  req.file;
+    if(!file) {
+        return res.status(400).json({
+            message: 'No file uploaded'
+        });
+    }
+    const pythonCode = fs.readFileSync(file.path, 'utf8');
+    console.log(pythonCode)
+    exec(`python ${file.path}`, (error, stdout, stderr) => {
+        if(error) {
+            console.log(`error: ${error.message}`);
+            res.status(400).json({
+                message: 'Error running python code'
+            });
+            return;
+        }
+        console.log(`Saída: ${stdout}`);
+        res.send(stdout);
+    });
+};
+
 module.exports = {
-    upload_file
+    upload_file,
+    run_python_code
 };
