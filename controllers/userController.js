@@ -11,7 +11,13 @@ const generate_token = (id) => {
         expiresIn: '7d'
     });
 };
-
+const validate_token = (token) => {
+    try {
+        return jwt.verify(token, secret);
+    } catch (error) {
+        return null;
+    }
+};
 const register_user = async(req, res) => {
     const { name, email, password, matricula } = req.body;
 
@@ -22,10 +28,8 @@ const register_user = async(req, res) => {
         });
         return;
     }
-
     const salt = await bcrypt.genSalt();
     const password_hash = await bcrypt.hash(password, salt);
-
     const new_user = {
         uuid: uuid.v4(),
         name,
@@ -34,9 +38,7 @@ const register_user = async(req, res) => {
         matricula,
         created_at: new Date().toISOString()
     };
-
     try {
-        
         await db.collection('users').doc(new_user.uuid).set(new_user);
         res.status(200).json({
             message: 'User registered successfully',
@@ -51,7 +53,6 @@ const register_user = async(req, res) => {
 
 const login_user = async(req, res) => {
     const { matricula, password } = req.body;
-
     const user = await db.collection('users').where('matricula', '==', matricula).get();
     if(user.docs.length === 0) {
         res.status(400).json({
@@ -73,7 +74,6 @@ const login_user = async(req, res) => {
         id: user_data.uuid
     });
 }
-
 
 module.exports = {
     register_user,
